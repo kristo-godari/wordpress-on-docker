@@ -1,3 +1,11 @@
 .idea
 latest.yml
 cicd/deploy/backups/tmp/*
+.DS_Store
+cicd/.DS_Store
+docs/.DS_Store
+src/.DS_Store
+util-scripts/.DS_Store
+src/web-server/.DS_Store
+src/web-server/sites/${sitename.com}/.DS_Store
+src/web-server/sites/${sitename.com}/html/.DS_Store

@@ -8,12 +8,14 @@ It's designed with the development process in mind, to make it easy for a single
 I could have just paid for a managed WordPress solution, but I'm the kind of guy who likes to learn and build stuff. 
 And while I have learned a lot from building this project, I have also had a lot of fun. 
 
-Feel free to submit improvements as Pull Requests. For sure this project can be improved further. 
+Feel free to submit improvements as Pull Requests. For sure this project can be improved further.
+<br/><br/><br/>
+Don't like reading, want some action, jump to: [Setup procedure](#setup-procedure)
 
 ## Conceptual design
 Check out the conceptual design here: [Conceptual Design](docs/conceptual-design.md)
 
-## Prerequisite
+## Prerequisite for running this project in production
 - Have a Virtual machine somewhere
   - create a user for that machine.
   - configure ssh for that user.
@@ -31,7 +33,7 @@ Check out the conceptual design here: [Conceptual Design](docs/conceptual-design
 - Have a Docker Hub account 
   - create a private repository for your domain.
 
-## Costs
+## Costs for running this project in production
 Costs will vary depending on the provider, and the machine specs but here is what currently I pay for mine:
 - Virtual machine:  6 euro/month (4 cores, 8 GB Ram, 200 GB (100% SSD), Unlimited BandWith). 78$/year 
 - Domain name: 15$/year. 
@@ -41,7 +43,7 @@ Costs will vary depending on the provider, and the machine specs but here is wha
 
 Total: ~106$/year, which is a good price, the average price for a managed WordPress(4 cores, 8 GB Ram) is ~700$/year.  
 
-# Constituent design decisions
+## Conscious design decisions
 - In docker hub, I have saved all my images in one private repository and separated them by tag, and names. 
   - kristogodari/general-private:${sitename.com}-database
   - kristogodari/general-private:${sitename.com}-webserver
@@ -104,7 +106,7 @@ Total: ~106$/year, which is a good price, the average price for a managed WordPr
   - The only restriction is given by Litespeed webserver. Check what is supported on the official website: https://openlitespeed.org/
 - You can customize almost any aspect of this project, by modifying the appropriate files.
 
-## Setup Procedure
+## Setup procedure
 - Search and replace in all the files and folders (except Readme files) in this repo for:
   - ${sitename.com} -> replace this with your site name ex: kristogodari.com
   - ${mysql-root-password} -> your desired mysql root password
