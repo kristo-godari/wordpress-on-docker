@@ -41,7 +41,7 @@ Costs will vary depending on the provider, and the machine specs but here is wha
 - S3 storage: free, by using the free tier.
 - Docker hub: free, by using only one private repository.
 
-Total: ~106$/year, which is a good price, the average price for a managed WordPress(4 cores, 8 GB Ram) is ~700$/year.  
+Total: ~106$/year, which in my opinion is a good price, the average price for a managed dedicated VM WordPress(4 cores, 8 GB Ram) is ~700$/year.  
 
 ## Conscious design decisions
 - In docker hub, I have saved all my images in one private repository and separated them by tag, and names. 
