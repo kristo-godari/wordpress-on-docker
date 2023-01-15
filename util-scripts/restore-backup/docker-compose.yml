@@ -1,0 +1,26 @@
+version: '3.5'
+services:
+  restore:
+    image: ${docker-hub-repository}:${sitename.com}-restore
+    container_name: ${sitename.com}-restore
+    environment:
+      AWS_ACCESS_KEY_ID: ${AWS_ACCESS_KEY_ID}
+      AWS_SECRET_ACCESS_KEY: ${AWS_SECRET_ACCESS_KEY}
+      AWS_BACKUP_BUCKET: ${AWS_BACKUP_BUCKET}
+      DOMAIN_NAME: ${DOMAIN_NAME}
+    volumes:
+      - ${sitename.com}_wordpress:/var/www/vhosts/${sitename.com}/html/
+      - ${sitename.com}_db_data:/var/lib/mysql
+    networks:
+      - ${sitename.com}_network
+networks:
+  ${sitename.com}_network:
+    external: true
+    name: ${sitename.com}_network
+volumes:
+  ${sitename.com}_db_data:
+    external: true
+    name: ${sitename.com}_db_data
+  ${sitename.com}_wordpress:
+    external: true
+    name: ${sitename.com}_wordpress
