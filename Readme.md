@@ -13,7 +13,7 @@ Feel free to submit improvements as Pull Requests. For sure this project can be 
 Don't like reading, want some action, jump to: [Setup procedure](#setup-procedure)
 
 ## Conceptual design
-Check out the conceptual design here: [Conceptual Design](docs/conceptual-design.md)
+Check out the conceptual design here: [Conceptual Design](docs/conceptual-design.md) to understand the big picture.
 
 ## Prerequisite for running this project in production
 - Have a Virtual machine somewhere
@@ -45,9 +45,9 @@ Total: ~106$/year, which is a good price, the average price for a managed WordPr
 
 ## Conscious design decisions
 - In docker hub, I have saved all my images in one private repository and separated them by tag, and names. 
-  - kristogodari/general-private:${sitename.com}-database
-  - kristogodari/general-private:${sitename.com}-webserver
-  - where general-private is my repository name, and kristogodari.com-database is the tag name. 
+  - kristogodari/private-repo:kristogodari.com-database
+  - kristogodari/private-repo:kristogodari.com-webserver
+  - where private-repo is my repository name, and kristogodari.com-database is the tag name. 
   - This might not be the optimal solution, but it works perfectly fine, since i don't want to pay for docker repositories, and don't want to expose my docker images publicly.
   - Anyway, if your situation is different, feel free to change this.
 - In S3, we have the following bucket structure:
@@ -107,6 +107,7 @@ Total: ~106$/year, which is a good price, the average price for a managed WordPr
 - You can customize almost any aspect of this project, by modifying the appropriate files.
 
 ## Setup procedure
+- Clone this project locally, and open it in an IDE
 - Search and replace in all the files and folders (except Readme files) in this repo for:
   - ${sitename.com} -> replace this with your site name ex: kristogodari.com
   - ${mysql-root-password} -> your desired mysql root password
@@ -133,11 +134,24 @@ Total: ~106$/year, which is a good price, the average price for a managed WordPr
   - copy docs/wordpress/.htaccess to src/web-server/sites/${sitename.com}/html
   - copy docs/wordpress/wp-config.php to src/web-server/sites/${sitename.com}/html 
     - make sure you replace variables like ${sitename.com}, ${mysql-user}, ${mysql-password} as well.
+- Build project
+  - change directory to `cicd` folder, and run `build.sh`
+- Run project
+  - change directory to `cicd` folder
+  - run `deploy.sh local` to deploy locally
+- Change hosts file
+  - Change /etc/hosts file and add the following line `127.0.0.1 domainname.com`
+- Access website locally
+  - Open domainname.com in web browser
+- Deploy on prod
+  - run `deploy.sh prod` to deploy in production
+  - Change /etc/hosts file and comment the following line `127.0.0.1 domainname.com`
 
 ## Backups
-- Backups are setup to run daily at 05:04 in the morning. You can change this in the crontab file.
+- Backups are set up to run daily at 05:04 in the morning. You can change this in the src/backup/crontab file.
 - Backup is done only if you deploy with the "prod" profile. If you test locally, backup will not work, since deployment is done with the "local" profile.
   - This is intentional since I ended up overriding the production backup a couple of times, with my local work.
+  - If you need to back up local work, you need to do this manually. Just login to docker container and run backup.sh script.
 - Sometimes you develop locally, and have the latest version of your data locally, and you want to put this in prod. You can easily accomplish this by:
   - Backup your work to s3
   - Login to the production server and restore the backup
