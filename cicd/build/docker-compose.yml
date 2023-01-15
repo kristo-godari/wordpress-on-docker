@@ -1,0 +1,32 @@
+version: '3.5'
+services:
+  database:
+    build:
+      context: ../../src/database
+    image: ${docker-hub-repository}:${sitename.com}-database
+    platform: linux/x86_64
+  web-server:
+    build:
+      context: ../../src/web-server
+      args:
+        ADMIN_USERNAME: ${LITESPEED_ADMIN_USERNAME}
+        ADMIN_PASSWORD: ${LITESPEED_ADMIN_PASSWORD}
+        DOMAIN_NAME: ${DOMAIN_NAME}
+    image: ${docker-hub-repository}:${sitename.com}-webserver
+    platform: linux/x86_64
+  database-admin-ui:
+    build:
+      context: ../../src/database-admin-ui
+    image: ${docker-hub-repository}:${sitename.com}-database-admin-ui
+    platform: linux/x86_64
+  backup:
+    build:
+      context: ../../src/backup
+    image: ${docker-hub-repository}:${sitename.com}-backup
+    platform: linux/x86_64
+  restore:
+    build:
+      context: ../../src/restore
+    image: ${docker-hub-repository}:${sitename.com}-restore
+    platform: linux/x86_64
+    container_name: ${sitename.com}-restore

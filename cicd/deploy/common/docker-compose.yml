@@ -1,0 +1,66 @@
+version: '3.5'
+services:
+  database:
+    image: ${docker-hub-repository}:${sitename.com}-database
+    container_name: ${sitename.com}-database
+    command: --max_allowed_packet=256M
+    volumes:
+      - ${sitename.com}_db_data:/var/lib/mysql
+    environment:
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD}
+      MYSQL_DATABASE: ${MYSQL_DATABASE}
+      MYSQL_USER: ${MYSQL_USER}
+      MYSQL_PASSWORD: ${MYSQL_PASSWORD}
+    restart: always
+    networks:
+      - ${sitename.com}_network
+  web-server:
+    image: ${docker-hub-repository}:${sitename.com}-webserver
+    container_name: ${sitename.com}-webserver
+    hostname: ${sitename.com}-webserver
+    extra_hosts:
+      - "${sitename.com}-webserver ${sitename.com}:127.0.0.1"
+    volumes:
+      -   ${sitename.com}_wordpress:/var/www/vhosts/${sitename.com}/html/
+    ports:
+      - 80:80
+      - 443:443
+      - 443:443/udp
+      - 7080:7080
+    restart: always
+    environment:
+      TZ: ${TIME_ZONE}
+    networks:
+      - ${sitename.com}_network
+  database-admin-ui:
+    image: ${docker-hub-repository}:${sitename.com}-database-admin-ui
+    container_name: ${sitename.com}-database-admin-ui
+    ports:
+      - "6080:8080"
+    environment:
+        DATABASE_HOST: database
+    restart: always
+    networks:
+      - ${sitename.com}_network
+  backup:
+    image: ${docker-hub-repository}:${sitename.com}-backup
+    container_name: ${sitename.com}-backup
+    environment:
+      AWS_ACCESS_KEY_ID: ${AWS_ACCESS_KEY_ID}
+      AWS_SECRET_ACCESS_KEY: ${AWS_SECRET_ACCESS_KEY}
+      AWS_BACKUP_BUCKET: ${AWS_BACKUP_BUCKET}
+      DEPLOYMENT_ENV: ${DEPLOYMENT_ENV}
+    volumes:
+      - ${sitename.com}_wordpress:/workspace/webserver
+      - ${sitename.com}_db_data:/workspace/database
+    networks:
+      - ${sitename.com}_network
+networks:
+  ${sitename.com}_network:
+    name: ${sitename.com}_network
+volumes:
+  ${sitename.com}_db_data:
+    name: ${sitename.com}_db_data
+  ${sitename.com}_wordpress:
+    name: ${sitename.com}_wordpress
+
