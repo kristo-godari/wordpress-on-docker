@@ -13,6 +13,9 @@ touch test.txt
 rm -r *
 tar xvf /workspace/backup/webserver-backup.tar --strip 2
 
+# fix permissions
+chown -R nobody:nogroup "/var/www/vhosts/$DOMAIN_NAME/html/"
+
 cd /var/lib/mysql
 touch test.txt
 rm -r *
