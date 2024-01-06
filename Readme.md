@@ -34,7 +34,7 @@ Check out the conceptual design here: [Conceptual Design](docs/conceptual-design
   - create a private repository for your domain.
 
 ## Costs for running this project in production
-Costs will vary depending on the provider, and the machine specs but here is what currently I pay for mine:
+Costs will vary depending on the provider, and the machine specs but here is what currently I pay for mine (in 2022):
 - Virtual machine:  6 euro/month (4 cores, 8 GB Ram, 200 GB (100% SSD), Unlimited BandWith). 78$/year 
 - Domain name: 15$/year. 
 - SSL certificates: 13$/year.
@@ -161,6 +161,21 @@ Total: ~106$/year, which in my opinion is a good price, the average price for a 
 - It's important to restart the containers after this happens.
 - You can use this to restore a production backup locally, so you can work on the latest production code, and data.
   - In my case, I don't have customer or sensitive data on my website, and I can easily work with production data locally.
+
+## Local testing
+- Move to cicd directory `cd cicd`
+- Run `deploy.sh local` to start containers locally
+- Update local hosts files for the domain to point to localhost
+  - Run `vim /etc/hosts`
+
+## Update SSL certificate procedure
+- Update the `src/web-server/cert/webadmin.crt` and `src/web-server/cert/webadmin.key` accordingly
+- Build and push new container images with running `cd cicd` and `./build.sh`
+- Deploy new containers to prod vm by running `./deploy.sh prod`
+
+Note: When you deploy to prod, you deploy the new container, but the existing volumes are reused. So all the existing changes should
+be there.
+
 
 ## Troubleshooting
 During my development and setup, sometimes things were not working as expected, and it is likely that you will face those issues too. I have taken notes on how I have solved them:
