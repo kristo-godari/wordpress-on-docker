@@ -1,0 +1,43 @@
+---
+- name: Setup Docker Volumes
+  hosts: localhost
+  vars_files:
+    - ../../env/common.yml
+    - ../../env/build.yml
+  tasks:
+    - name: Delete old Docker volumes
+      docker_volume:
+        name: "{{ item }}"
+        state: absent
+      loop:
+        - "{{ DOMAIN_NAME }}_db_data"
+        - "{{ DOMAIN_NAME }}_webserver_certs"
+        - "{{ DOMAIN_NAME }}_website_files"
+
+    - name: Create new Docker volumes
+      docker_volume:
+        name: "{{ item }}"
+        state: present
+      loop:
+        - "{{ DOMAIN_NAME }}_db_data"
+        - "{{ DOMAIN_NAME }}_webserver_certs"
+        - "{{ DOMAIN_NAME }}_website_files"
+
+    - name: Copy data to new volumes
+      block:
+        - name: Copy cert files
+          docker_container:
+            name: dummy
+            image: hello-world
+            volumes:
+              - "{{ DOMAIN_NAME }}_webserver_certs:/root"
+            state: started
+          register: dummy_container
+
+        - name: Copy cert files to dummy containers
+          command: docker cp ../../ssl-certs/. dummy:/root/
+
+        - name: Remove dummy container
+          docker_container:
+            name: dummy
+            state: absent

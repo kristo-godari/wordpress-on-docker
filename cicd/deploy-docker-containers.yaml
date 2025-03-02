@@ -1,0 +1,136 @@
+---
+- name: Deploy Docker containers ({{ env }})
+  hosts: "{{ 'localhost' if env == 'local' else SSH_SERVER_IP }}"
+  connection: "{{ 'local' if env == 'local' else 'ssh' }}"
+  gather_facts: false
+  vars:
+    env: "{{ env }}" 
+
+  # Note: We cannot easily use jinja2 in the play’s vars_files header (depending on your Ansible version),
+  # so we include the env-specific variables in the first task.
+  tasks:
+    - name: Include common variables
+      include_vars: "../../env/common.yml"
+    
+    - name: Include env-specific variables
+      include_vars: 
+         file: "{{ '../../env/deploy.local.yml' if env == 'local' else '../../env/deploy.prod.yml' }}"
+
+    - name: Ensure required docker volumes exist
+      docker_volume:
+        name: "{{ item }}"
+        state: present
+      loop:
+        - "{{ DOMAIN_NAME }}_db_data"
+        - "{{ DOMAIN_NAME }}_webserver_certs"
+        - "{{ DOMAIN_NAME }}_website_files"
+
+    - name: Ensure docker network exists
+      docker_network:
+        name: "{{ DOMAIN_NAME }}_network"
+        state: present
+
+    - name: Remove old containers (if any)
+      community.docker.docker_container:
+        name: "{{ item }}"
+        state: absent
+      loop:
+        - "{{ DOMAIN_NAME }}-database"
+        - "{{ DOMAIN_NAME }}-webserver"
+        - "{{ DOMAIN_NAME }}-database-admin-ui"
+        - "{{ DOMAIN_NAME }}-backup"
+        - "{{ DOMAIN_NAME }}-local-sync"
+      ignore_errors: yes
+
+    - name: Deploy database container
+      community.docker.docker_container:
+        name: "{{ DOMAIN_NAME }}-database"
+        image: "{{ DOCKER_HUB_REPOSITORY }}:{{ DOMAIN_NAME }}-database-{{ IMAGE_TAG }}"
+        command: "--max_allowed_packet=256M"
+        volumes:
+          - "{{ DOMAIN_NAME }}_db_data:/var/lib/mysql"
+        env:
+          MYSQL_ROOT_PASSWORD: "{{ DB_ROOT_PASSWORD }}"
+          MYSQL_DATABASE: "{{ DB_NAME }}"
+          MYSQL_USER: "{{ DB_USER }}"
+          MYSQL_PASSWORD: "{{ DB_PASSWORD }}"
+        restart_policy: always
+        networks:
+          - name: "{{ DOMAIN_NAME }}_network"
+        state: started
+        recreate: yes
+
+    - name: Deploy webserver container
+      community.docker.docker_container:
+        name: "{{ DOMAIN_NAME }}-webserver"
+        image: "{{ DOCKER_HUB_REPOSITORY }}:{{ DOMAIN_NAME }}-webserver-{{ IMAGE_TAG }}"
+        hostname: "{{ DOMAIN_NAME }}-webserver"
+        command: ["bash", "/home/fix-permissions.sh"]
+        volumes:
+          - "{{ DOMAIN_NAME }}_website_files:/var/www/vhosts/{{ DOMAIN_NAME }}/html/wp-content"
+          - "{{ DOMAIN_NAME }}_webserver_certs:/usr/local/lsws/cert"
+        published_ports:
+          - "80:80"
+          - "443:443"
+          - "443:443/udp"
+          - "7080:7080"
+        env:
+          TZ: "{{ TIME_ZONE }}"
+          DB_NAME: "{{ DB_NAME }}"
+          DB_USER: "{{ DB_USER }}"
+          DB_PASSWORD: "{{ DB_PASSWORD }}"
+          DB_HOST: "{{ DB_HOST }}"
+          DOMAIN_NAME: "{{ DOMAIN_NAME }}"
+        etc_hosts: "{{ { (DOMAIN_NAME ~ '-webserver'): '127.0.0.1', DOMAIN_NAME: '127.0.0.1' } }}"
+        restart_policy: always
+        networks:
+          - name: "{{ DOMAIN_NAME }}_network"
+        state: started
+        recreate: yes
+
+    - name: Deploy database-admin-ui container
+      community.docker.docker_container:
+        name: "{{ DOMAIN_NAME }}-database-admin-ui"
+        image: "{{ DOCKER_HUB_REPOSITORY }}:{{ DOMAIN_NAME }}-database-admin-ui-{{ IMAGE_TAG }}"
+        published_ports:
+          - "6080:8080"
+        env:
+          DATABASE_HOST: "database"
+        restart_policy: always
+        networks:
+          - name: "{{ DOMAIN_NAME }}_network"
+        state: started
+        recreate: yes
+
+    - name: Deploy backup container
+      community.docker.docker_container:
+        name: "{{ DOMAIN_NAME }}-backup"
+        image: "{{ DOCKER_HUB_REPOSITORY }}:{{ DOMAIN_NAME }}-backup-{{ IMAGE_TAG }}"
+        volumes:
+          - "{{ DOMAIN_NAME }}_website_files:/workspace/webserver/website-files"
+          - "{{ DOMAIN_NAME }}_webserver_certs:/workspace/webserver/webserver-certs"
+          - "{{ DOMAIN_NAME }}_db_data:/workspace/database"
+        env:
+          AWS_ACCESS_KEY_ID: "{{ AWS_ACCESS_KEY_ID }}"
+          AWS_SECRET_ACCESS_KEY: "{{ AWS_SECRET_ACCESS_KEY }}"
+          AWS_BACKUP_BUCKET: "{{ AWS_BACKUP_BUCKET }}"
+          DOCKER_VOLUME_VERSION: "{{ DOCKER_VOLUME_VERSION }}"
+        networks:
+          - name: "{{ DOMAIN_NAME }}_network"
+        state: started
+        recreate: yes
+
+    - name: Deploy local-sync container
+      docker_container:
+        name: "{{ DOMAIN_NAME }}-local-sync"
+        image: "{{ DOCKER_HUB_REPOSITORY }}:{{ DOMAIN_NAME }}-local-sync-{{ IMAGE_TAG }}"
+        detach: true
+        privileged: true
+        volumes:
+          - "{{ DOMAIN_NAME }}_website_files:/volume"
+          - "../../wp-content:/local"
+        restart_policy: always
+      when: env == 'local'
+
+    - name: Clean up unused docker containers and images (optional)
+      shell: "docker container prune -f && docker image prune -f"

@@ -1,0 +1,41 @@
+---
+- name: Publish Docker Images
+  hosts: localhost
+  vars_files:
+    - ../../env/common.yml
+  tasks:
+    - name: Log in to Docker Hub
+      community.docker.docker_login:
+        username: "{{ DOCKER_HUB_USERNAME }}"
+        password: "{{ DOCKER_HUB_PASSWORD }}"
+        registry_url: "{{ DOCKER_HUB_URL }}"
+
+    - name: Push local images to Docker Hub
+      community.docker.docker_image:
+        name: "{{ DOCKER_HUB_REPOSITORY }}:{{ DOMAIN_NAME }}-database-{{ IMAGE_TAG }}"
+        source: local
+        push: yes
+    
+    - name: Push local images to Docker Hub
+      community.docker.docker_image:
+          name: "{{ DOCKER_HUB_REPOSITORY }}:{{ DOMAIN_NAME }}-webserver-{{ IMAGE_TAG }}"
+          source: local
+          push: yes
+
+    - name: Push local images to Docker Hub
+      community.docker.docker_image:
+        name: "{{ DOCKER_HUB_REPOSITORY }}:{{ DOMAIN_NAME }}-database-admin-ui-{{ IMAGE_TAG }}"
+        source: local
+        push: yes
+
+    - name: Push local images to Docker Hub
+      community.docker.docker_image:
+        name: "{{ DOCKER_HUB_REPOSITORY }}:{{ DOMAIN_NAME }}-backup-{{ IMAGE_TAG }}"
+        source: local
+        push: yes
+
+    - name: Push local images to Docker Hub
+      community.docker.docker_image:
+        name: "{{ DOCKER_HUB_REPOSITORY }}:{{ DOMAIN_NAME }}-restore-{{ IMAGE_TAG }}"
+        source: local
+        push: yes

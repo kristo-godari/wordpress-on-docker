@@ -1,0 +1,66 @@
+---
+- name: Setup Docker Environment
+  hosts: localhost
+  vars_files:
+    - ../../env/common.yml
+    - ../../env/build.yml
+  tasks:
+    - name: Build and tag database image
+      community.docker.docker_image:
+        source: build
+        build:
+          path: ../src/database
+        name: "{{ DOCKER_HUB_REPOSITORY }}:{{ DOMAIN_NAME }}-database-{{ IMAGE_TAG }}"
+
+    - name: Build and tag webserver image
+      community.docker.docker_image:
+        source: build
+        build:
+          path: ../src/webserver
+          args:
+            ADMIN_USERNAME: "{{ LITESPEED_ADMIN_USERNAME }}"
+            ADMIN_PASSWORD: "{{ LITESPEED_ADMIN_PASSWORD }}"
+            DOMAIN_NAME: "{{ DOMAIN_NAME }}"
+            WORDPRESS_VERSION: "{{ WORDPRESS_VERSION }}"
+            DB_NAME: "{{ DB_NAME }}"
+            DB_USER: "{{ DB_USER }}"
+            DB_PASSWORD: "{{ DB_PASSWORD }}"
+            DB_HOST: "{{ DB_HOST }}"
+            AUTH_KEY: "{{ AUTH_KEY }}"
+            SECURE_AUTH_KEY: "{{ SECURE_AUTH_KEY }}"
+            LOGGED_IN_KEY: "{{ LOGGED_IN_KEY }}"
+            NONCE_KEY: "{{ NONCE_KEY }}"
+            AUTH_SALT: "{{ AUTH_SALT }}"
+            SECURE_AUTH_SALT: "{{ SECURE_AUTH_SALT }}"
+            LOGGED_IN_SALT: "{{ LOGGED_IN_SALT }}"
+            NONCE_SALT: "{{ NONCE_SALT }}"
+            SITE_URL: "{{ SITE_URL }}"
+        name: "{{ DOCKER_HUB_REPOSITORY }}:{{ DOMAIN_NAME }}-webserver-{{ IMAGE_TAG }}"
+
+    - name: Build and tag database-admin-ui image
+      community.docker.docker_image: 
+        source: build
+        build:
+          path: ../src/database-admin-ui
+        name: "{{ DOCKER_HUB_REPOSITORY }}:{{ DOMAIN_NAME }}-database-admin-ui-{{ IMAGE_TAG }}"
+
+    - name: Build and tag backup image
+      community.docker.docker_image:
+        source: build
+        build:
+          path: ../src/backup
+        name: "{{ DOCKER_HUB_REPOSITORY }}:{{ DOMAIN_NAME }}-backup-{{ IMAGE_TAG }}"
+
+    - name: Build and tag restore image
+      community.docker.docker_image:
+        source: build
+        build:
+          path: ../src/restore
+        name: "{{ DOCKER_HUB_REPOSITORY }}:{{ DOMAIN_NAME }}-restore-{{ IMAGE_TAG }}"
+
+    - name: Build and local-sync image
+      community.docker.docker_image:
+        source: build
+        build:
+          path: ../src/local-sync
+        name: "{{ DOCKER_HUB_REPOSITORY }}:{{ DOMAIN_NAME }}-local-sync-{{ IMAGE_TAG }}"

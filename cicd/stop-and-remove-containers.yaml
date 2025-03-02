@@ -1,0 +1,26 @@
+---
+- name: Stop and remove containers
+  hosts: localhost
+  gather_facts: false
+  
+  tasks:
+    - name: Check if containers are running
+      command: docker ps -q
+      register: docker_ps_output
+      changed_when: false
+      failed_when: false
+
+    - name: Stop containers
+      command: docker stop {{ item }}
+      with_items: "{{ docker_ps_output.stdout_lines }}"
+      when: docker_ps_output.stdout_lines | length > 0
+
+    - name: Remove containers
+      command: docker rm {{ item }}
+      with_items: "{{ docker_ps_output.stdout_lines }}"
+      when: docker_ps_output.stdout_lines | length > 0
+
+    - name: Print message when no containers are running
+      debug:
+        msg: "No containers are currently running. Nothing to stop!"
+      when: docker_ps_output.stdout_lines | length == 0
