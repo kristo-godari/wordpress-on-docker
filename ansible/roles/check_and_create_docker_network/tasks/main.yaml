@@ -1,0 +1,9 @@
+---
+- name: Check if Docker network exists
+  command: docker network inspect "{{ DOMAIN_NAME }}_network"
+  register: network_check
+  ignore_errors: true
+
+- name: Create Docker network if it does not exist
+  command: docker network create "{{ DOMAIN_NAME }}_network"
+  when: network_check.rc != 0

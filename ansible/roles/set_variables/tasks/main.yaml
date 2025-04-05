@@ -1,0 +1,7 @@
+---
+- name: Include common variables
+  include_vars: "../../../env/common.yml"
+
+- name: Include env-specific variables
+  include_vars: 
+      file: "{{ '../../../env/deploy.local.yml' if env == 'local' else '../../../env/deploy.prod.yml' }}"

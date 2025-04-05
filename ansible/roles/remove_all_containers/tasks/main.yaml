@@ -1,0 +1,12 @@
+---
+- name: Remove old containers (if any)
+  community.docker.docker_container:
+    name: "{{ item }}"
+    state: absent
+  loop:
+    - "{{ DOMAIN_NAME }}-database"
+    - "{{ DOMAIN_NAME }}-webserver"
+    - "{{ DOMAIN_NAME }}-database-admin-ui"
+    - "{{ DOMAIN_NAME }}-backup"
+    - "{{ DOMAIN_NAME }}-local-sync"
+  ignore_errors: yes

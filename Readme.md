@@ -12,6 +12,9 @@ Don't like reading, want some action, jump to: [Use Cases](#use-cases)
 This project is meant to be added as a git submodule to your website repo.
 Your website repo needs to have the following folders and files in the root:
 - env
+  - ansible-inventory
+    - local.yml
+    - prod.yml
   - build.yml
   - common.yml
   - deploy.local.yml
@@ -19,6 +22,8 @@ Your website repo needs to have the following folders and files in the root:
 - ssl-certs
   - ssl.crt
   - ssl.key
+- ssh
+  - prod-key.pem
 - wp-content
 
 Check example repository here: [Wordpress on Docker - Website](https://github.com/kristo-godari) 
@@ -35,10 +40,6 @@ Check out the conceptual design here: [Conceptual Design](docs/conceptual-design
 - Have a Virtual machine somewhere
   - create a user for that machine.
   - configure ssh for that user.
-  - install docker on that machine.
-  - install docker compose on that machine.
-  - login in your docker hub account in order to pull images (if the repository is private).
-  - crate a /workspace directory and make it owned by the current user.
 - Have a domain name
   - Configure domain name dns to point to the IP address of your virtual machine.
 - Have an SSL certificate valid for that domain
@@ -69,14 +70,16 @@ Check out the conceptual design here: [Conceptual Design](docs/conceptual-design
     - Backup is done daily, and the space can grow very quickly, if you are not careful, and amazon will start to charge you.
 
 ## Project structure explained
-- cicd - continuous integration and continuous delivery
-  - build-docker-images.yaml: ansible playbook for building docker images
-  - deploy-docker-containers.yaml: ansible playbook for deploying docker containers
-  - build-docker-volumens.yaml: ansible playbook for building docker volumes
-  - publish-docker-images.yaml: ansible playbook for publishing docker images to docker hub
-  - backup-docker-volumes.yaml: ansible playbook for backing up docker volumes
-  - restore-docker-volumes.yaml: ansible playbook for restoring docker volumes
-  - stop-and-remove-containers.yaml: ansible playbook for stopping and removing containers
+- ansible - contains ansible files
+  - playbooks - contains ansible playbooks
+    - build-docker-images.yaml: ansible playbook for building docker images
+    - deploy-docker-containers.yaml: ansible playbook for deploying docker containers
+    - build-docker-volumens.yaml: ansible playbook for building docker volumes
+    - publish-docker-images.yaml: ansible playbook for publishing docker images to docker hub
+    - backup-docker-volumes.yaml: ansible playbook for backing up docker volumes
+    - deploy-docker-volumes.yaml: ansible playbook for deploying docker volumes
+    - stop-and-remove-containers.yaml: ansible playbook for stopping and removing containers
+  - roles - contains ansible roles
 - docs
   - documentation files
 - src - source code files for building images
@@ -98,40 +101,43 @@ Check out the conceptual design here: [Conceptual Design](docs/conceptual-design
   - When you deploy to prod, you deploy the new container, but the existing volumes are reused. So all the existing files should be there. 
 
 ## Use cases
+Note: Below i provide the steps so you understand the process, but all those steps can be automated using github actions, or bitbucket pipeline.
+
 ### Starting from schratch / New website creation
-- Navigate to `cicd` directory
-- Run `ansible-playbook build-docker-images.yaml`. This will build all docker images.
-- Then run `ansible-playbook build-docker-volumes.yaml`. This will build the initial docker volumes.
-- Then run `ansible-playbook deploy-docker-containers.yaml -e "env=local"`. This will deploy docker containers locally.
+- Navigate to `ansible` directory
+- Run `ansible-playbook playbooks/build-docker-images.yaml`. This will build all docker images.
+- Then run `ansible-playbook playbooks/build-docker-volumes.yaml`. This will build the initial docker volumes.
+- Then run `ansible-playbook playbooks/deploy-docker-containers.yaml -e "env=local"`. This will deploy docker containers locally.
   - env can take the following values: local, prod
 - At this point we have containers, and volumes, we can test locally, follow the section [Local Testing](#local-testing) from below, and once you finished there you can continue with next steps here.
 - Setup wordpress, configure it, install plugins, themes, add content etc... 
-- Once you are happy with the results, and everyting is working you can publish docker images to docker hub, by running: `ansible-playbook publish-docker-images.yaml`
-- Once you are ready, or you want to save the progress, you can run: `ansible-playbook backup-docker-volumes.yaml -e "env=local"` or `ansible-playbook backup-docker-volumes.yaml -e "env=dev"`
+- Once you are happy with the results, and everyting is working you can publish docker images to docker hub, by running: `ansible-playbook playbooks/publish-docker-images.yaml`
+- Once you are ready, or you want to save the progress, you can run: `ansible-playbook playbooks/backup-docker-volumes.yaml -e "env=local version=local"` or `ansible-playbook backup-docker-volumes.yaml -e "env=local version=dev"`
   - This will backup your volumes, in S3 under the local or dev folder. Local if you want to save work for latter, dev if you want to proceed with the prod deployment.
 - To delploy in production we need:
-  - First to have voumes from dev, by running: `ansible-playbook restore-docker-volumes.yaml -e "env=dev"`
-  - Then to deploy containers with running: `ansible-playbook deploy-docker-containers.yaml -e "env=prod"`
-- Now comment the `127.0.0.1 your-domain-name.com` from `etc/hosts` so we can redirect traffic to the production server.
+  - First we need to install docker on the VM (only if not installed already): `ansible-playbook playbooks/install-docker-on-ubuntu.yaml`
+  - First to have voumes from dev, by running: `ansible-playbook playbooks/deploy-docker-volumes.yaml  -e "env=prod version=dev"`
+  - Then to deploy containers with running: `ansible-playbook playbooks/deploy-docker-containers.yaml  -e "env=prod"`
+- Now uncomment the `127.0.0.1 your-domain-name.com` from `etc/hosts` so we can redirect traffic to the production server.
 - Voilà, now you have the website up and running in production. 
 
 ### Maitenance Docker Image Update
 - Modify docker images source files from `src` folder
-- Run `ansible-playbook build-docker-images.yaml`. This will build the new docker images.
+- Run `ansible-playbook playbooks/build-docker-images.yaml`. This will build the new docker images.
 - Test locally the new images 
-- Publish image to docker hub by running: `ansible-playbook publish-docker-images.yaml`
+- Publish image to docker hub by running: `ansible-playbook playbooks/publish-docker-images.yaml`
 - Update deployment ansible playbook if needed in: `deploy-docker-containers.yaml`
-- Replace prod containers with new ones, by running: `ansible-playbook deploy-docker-containers.yaml -e "env=prod"`
+- Replace prod containers with new ones, by running: `ansible-playbook playbooks/deploy-docker-containers.yaml -e "env=prod"`
 
 ### SSL Certificate Update / Wordpress Update / Files Update etc..
 - Update files from the source git repo, with new certificates, file modification etc...
-- Build new volumes by running `ansible-playbook build-docker-volumes.yaml` 
-- Backup thew new volumes to S3 dev by running: `ansible-playbook backup-docker-volumes.yaml -e "env=dev"`
-- Deploy new volumes to prod, by restoring form s3 dev: `ansible-playbook restore-docker-volumes.yaml -e "env=dev"`
-- Restart prod containers with new volumes by running: `ansible-playbook deploy-docker-containers.yaml -e "env=prod"`
+- Build new volumes by running `ansible-playbook playbooks/build-docker-volumes.yaml` 
+- Backup thew new volumes to S3 dev by running: `ansible-playbook playbooks/backup-docker-volumes.yaml -e "env=local version=dev"`
+- Deploy new volumes to prod, by restoring form s3 dev: `ansible-playbook playbooks/deploy-docker-volumes.yaml  -e "env=prod version=dev"`
+- Restart prod containers with new volumes by running: `ansible-playbook playbooks/deploy-docker-containers.yaml  -e "env=prod"`
 
 ## Local testing
-- Run `ansible-playbook deploy-docker-containers.yaml -e "env=local"` to start containers locally
+- Run `ansible-playbook playbooks/deploy-docker-containers.yaml  -e "env=local"` to start containers locally
   - This will run docker containers, and attach the volumes created above. By this point you have the infrastructue up and running. 
 - Before accessing your website from the browser, we need to adjust the `etc/hosts` file by running `vim /etc/hosts` to add a new rule `127.0.0.1 your-domain-name.com`
   - Replace your-domain-name.com with your real domain name. 

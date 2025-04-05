@@ -1,22 +1,22 @@
 ---
 - name: Setup Docker Environment
-  hosts: localhost
+  hosts: localhosts
   vars_files:
-    - ../../env/common.yml
-    - ../../env/build.yml
+    - ../../../env/common.yml
+    - ../../../env/build.yml
   tasks:
     - name: Build and tag database image
       community.docker.docker_image:
         source: build
         build:
-          path: ../src/database
+          path: ../../src/database
         name: "{{ DOCKER_HUB_REPOSITORY }}:{{ DOMAIN_NAME }}-database-{{ IMAGE_TAG }}"
 
     - name: Build and tag webserver image
       community.docker.docker_image:
         source: build
         build:
-          path: ../src/webserver
+          path: ../../src/webserver
           args:
             ADMIN_USERNAME: "{{ LITESPEED_ADMIN_USERNAME }}"
             ADMIN_PASSWORD: "{{ LITESPEED_ADMIN_PASSWORD }}"
@@ -41,26 +41,26 @@
       community.docker.docker_image: 
         source: build
         build:
-          path: ../src/database-admin-ui
+          path: ../../src/database-admin-ui
         name: "{{ DOCKER_HUB_REPOSITORY }}:{{ DOMAIN_NAME }}-database-admin-ui-{{ IMAGE_TAG }}"
 
     - name: Build and tag backup image
       community.docker.docker_image:
         source: build
         build:
-          path: ../src/backup
+          path: ../../src/backup
         name: "{{ DOCKER_HUB_REPOSITORY }}:{{ DOMAIN_NAME }}-backup-{{ IMAGE_TAG }}"
 
     - name: Build and tag restore image
       community.docker.docker_image:
         source: build
         build:
-          path: ../src/restore
+          path: ../../src/restore
         name: "{{ DOCKER_HUB_REPOSITORY }}:{{ DOMAIN_NAME }}-restore-{{ IMAGE_TAG }}"
 
     - name: Build and local-sync image
       community.docker.docker_image:
         source: build
         build:
-          path: ../src/local-sync
+          path: ../../src/local-sync
         name: "{{ DOCKER_HUB_REPOSITORY }}:{{ DOMAIN_NAME }}-local-sync-{{ IMAGE_TAG }}"

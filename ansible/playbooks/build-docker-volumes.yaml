@@ -1,9 +1,9 @@
 ---
 - name: Setup Docker Volumes
-  hosts: localhost
+  hosts: localhosts
   vars_files:
-    - ../../env/common.yml
-    - ../../env/build.yml
+    - ../../../env/common.yml
+    - ../../../env/build.yml
   tasks:
     - name: Delete old Docker volumes
       docker_volume:
@@ -35,7 +35,7 @@
           register: dummy_container
 
         - name: Copy cert files to dummy containers
-          command: docker cp ../../ssl-certs/. dummy:/root/
+          command: docker cp ../../../ssl-certs/. dummy:/root/
 
         - name: Remove dummy container
           docker_container:

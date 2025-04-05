@@ -1,8 +1,8 @@
 ---
 - name: Publish Docker Images
-  hosts: localhost
+  hosts: docker_deployment_hosts
   vars_files:
-    - ../../env/common.yml
+    - ../../../env/common.yml
   tasks:
     - name: Log in to Docker Hub
       community.docker.docker_login:

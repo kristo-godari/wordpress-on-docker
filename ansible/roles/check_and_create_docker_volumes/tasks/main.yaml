@@ -1,0 +1,17 @@
+---
+- name: Check Docker volumes existence
+  command: docker volume inspect "{{ item }}"
+  register: volume_check
+  ignore_errors: true
+  loop:
+    - "{{ DOMAIN_NAME }}_db_data"
+    - "{{ DOMAIN_NAME }}_webserver_certs"
+    - "{{ DOMAIN_NAME }}_website_files"
+
+- name: Create missing Docker volumes
+  command: docker volume create "{{ item }}"
+  ignore_errors: true
+  loop:
+    - "{{ DOMAIN_NAME }}_db_data"
+    - "{{ DOMAIN_NAME }}_webserver_certs"
+    - "{{ DOMAIN_NAME }}_website_files"

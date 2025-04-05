@@ -1,0 +1,17 @@
+---
+- name: Check if already logged in to docker hub
+  command: docker info
+  register: docker_info
+  ignore_errors: true
+  changed_when: false
+  become: false
+
+- name: Login to Docker Hub
+  docker_login:
+    registry_url: https://index.docker.io/v1/
+    username: "{{ DOCKER_HUB_USERNAME }}"
+    password: "{{ DOCKER_HUB_PASSWORD }}"
+  become: false
+  when: "'Registry: https://index.docker.io/v1/' not in docker_info.stdout"
+  changed_when: "(docker_login_result.Status is defined and docker_login_result.Status == 'Login Succeeded') or ('username' in docker_login_result)"
+  register: docker_login_result

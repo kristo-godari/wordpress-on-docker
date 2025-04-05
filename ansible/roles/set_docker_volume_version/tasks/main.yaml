@@ -1,0 +1,4 @@
+---
+- name: Set DOCKER_VOLUME_VERSION from parameter
+  set_fact:
+    DOCKER_VOLUME_VERSION: "{{ version }}"

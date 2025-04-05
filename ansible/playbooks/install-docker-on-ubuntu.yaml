@@ -1,0 +1,84 @@
+---
+- name: Install Docker and Configure Non-Root User Access (Refactored from Shell Commands)
+  hosts: prod_host
+  become: true
+  tasks:
+    - name: Update apt package index
+      apt:
+        update_cache: true
+        cache_valid_time: 3600
+
+    - name: Install prerequisite packages (ca-certificates, curl)
+      apt:
+        name:
+          - ca-certificates
+          - curl
+        state: present
+
+    - name: Create the directory for the key (/etc/apt/keyrings)
+      file:
+        path: /etc/apt/keyrings
+        state: directory
+        mode: 0755
+
+    - name: Download the Docker GPG key
+      get_url:
+        url: https://download.docker.com/linux/ubuntu/gpg
+        dest: /etc/apt/keyrings/docker.asc
+        mode: 0755
+
+    - name: Set permissions for the Docker GPG key
+      file:
+        path: /etc/apt/keyrings/docker.asc
+        mode: a+r
+
+    - name: Add Docker repository to Apt sources
+      shell: |
+        echo "deb [arch=$(dpkg --print-architecture) signed-by=/etc/apt/keyrings/docker.asc] https://download.docker.com/linux/ubuntu $(. /etc/os-release && echo "${UBUNTU_CODENAME:-$VERSION_CODENAME}") stable" | sudo tee /etc/apt/sources.list.d/docker.list > /dev/null
+      args:
+        executable: /bin/bash
+      changed_when: true
+      register: add_docker_repo
+
+    - name: Install Docker Engine, containerd, and Docker Compose
+      apt:
+        name:
+          - docker-ce
+          - docker-ce-cli
+          - containerd.io
+          - docker-buildx-plugin
+          - docker-compose-plugin
+        state: present
+        update_cache: true
+
+    - name: Ensure Docker service is started and enabled
+      service:
+        name: docker
+        state: started
+        enabled: true
+
+    - name: Check if docker group exists
+      group:
+        name: docker
+        state: present
+
+    - name: Add user to docker group
+      user:
+        name: "{{ ansible_user }}"
+        groups: docker
+        append: true
+      when: ansible_user is defined
+
+    - name: Check if user is already in docker group
+      shell: groups $USER | grep -q docker
+      args:
+        executable: /bin/bash
+      register: user_in_docker_group
+      ignore_errors: true
+      changed_when: false
+      when: ansible_user is defined
+
+    - name: Log out and log back in to apply group membership (if not already in group) - only if needed
+      block:
+        - name: Reset connection to apply group membership
+          meta: reset_connection

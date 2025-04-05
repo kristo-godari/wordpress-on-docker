@@ -1,0 +1,12 @@
+---
+- name: Deploy Docker Volumes and Start Restore Container ({{ env }})
+  hosts: "{{ 'localhost' if env == 'local' else 'prod_host' }}"
+  roles:
+    - name: set_variables
+    - name: set_docker_volume_version
+    - name: docker_login
+    - name: check_and_create_docker_network
+    - name: check_and_create_docker_volumes
+    - name: start_volume_restore_container
+    - name: restart_db_container
+    - name: restart_webserver_container 

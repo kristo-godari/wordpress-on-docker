@@ -1,0 +1,22 @@
+---
+- name: Remove old container (if any)
+  community.docker.docker_container:
+    name: "{{ item }}"
+    state: absent
+  loop:
+    - "{{ DOMAIN_NAME }}-restore"
+  ignore_errors: yes
+
+- name: Start restore container
+  command: >
+    docker run -d --name {{ DOMAIN_NAME }}-restore
+    --network {{ DOMAIN_NAME }}_network
+    -e AWS_ACCESS_KEY_ID={{ AWS_ACCESS_KEY_ID }}
+    -e AWS_SECRET_ACCESS_KEY={{ AWS_SECRET_ACCESS_KEY }}
+    -e AWS_BACKUP_BUCKET={{ AWS_BACKUP_BUCKET }}
+    -e DOMAIN_NAME={{ DOMAIN_NAME }}
+    -e DOCKER_VOLUME_VERSION={{ DOCKER_VOLUME_VERSION }}
+    -v {{ DOMAIN_NAME }}_website_files:/var/www/vhosts/
+    -v {{ DOMAIN_NAME }}_webserver_certs:/usr/local/lsws/cert
+    -v {{ DOMAIN_NAME }}_db_data:/var/lib/mysql
+    {{ DOCKER_HUB_REPOSITORY }}:{{ DOMAIN_NAME }}-restore-{{ IMAGE_TAG }}

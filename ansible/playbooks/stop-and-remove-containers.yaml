@@ -1,6 +1,6 @@
 ---
 - name: Stop and remove containers
-  hosts: localhost
+  hosts: docker_deployment_hosts
   gather_facts: false
   
   tasks:

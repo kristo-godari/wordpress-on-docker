@@ -1,14 +1,9 @@
 ---
 - name: Execute backup script on Docker container
-  hosts: localhost
-  vars_files:
-    - ../../env/common.yml
-  gather_facts: false
-  vars:
-    env: "{{ env }}"
+  hosts: localhosts
+  roles:
+    - name: set_variables
+    - name: set_docker_volume_version
   tasks:
-    - name: Set DOCKER_VOLUME_VERSION from parameter
-      set_fact:
-        DOCKER_VOLUME_VERSION: "{{ env }}"
     - name: Execute backup script
       command: docker exec {{ DOMAIN_NAME }}-backup sh -c 'DOCKER_VOLUME_VERSION={{ DOCKER_VOLUME_VERSION }} /workspace/backup.sh'
