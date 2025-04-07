@@ -24,7 +24,7 @@ If we zoom in inside the production VM, we will see:
 Let's think of VM as a box organized in multiple layers. 
  - Layer 1: The Operating system layer  
    - This layer is preconfigured when you order the VM, so you don't need to do much here. 
-   - It's a linux-fedora-35 in my case, but it could be any linux.
+   - It's a ubuntu in my case, but it could be any linux.
  - Layer 2: Docker layer 
    - Docker and Docker compose are installed here. This will provide the infrastructure to run Docker containers. 
    - On this layer we also find docker volumes, that are managed by Docker.
@@ -44,10 +44,10 @@ Let's think of VM as a box organized in multiple layers.
    - Backup Container
      - In charge of backing up the webserver and database volumes to Amazon S3.
      - Has mounted the two volumes: webserver volume, database volume
-     - Has cron job, that backups every day at 05:04 am
+     - Has cron job, that backups every day at a specific time (ex:05:04 am)
    - Restore Container
      - In charge of restoring a backup from S3.
-     - Not running in production, need to be started manually when is a need for backup restore
+     - Not running all the time in production, need to be started when is a need for backup restore
      - Connects to S3, retrieves backup files, and overrides files from Docker volumes.
 
 ## Development and Deployment Flows
@@ -58,16 +58,17 @@ As is the case for most small business there is a single developer who is doing 
 
 ### Development Flow
 - Develop and test on local pc.
-  - If you already have the website in production, you can test with production data, by using the restore container to restore the last backup from production. This way you are developing on the latest production code and data. 
-  - If during the development you added some new data, you can run the backup container locally with backup to dev folder from s3, and then manually trigger restore on production vm, and you will have what you added locally also in production.
+  - If you start from schratch it's easy, everything happens locally. 
+  - If you already have the website in production, you can start with production data, by using the restore container to restore the last backup from production. This way you are developing on the latest production code and data. 
+  - If during the development you added some new data, you can run the backup container locally with backup to dev folder in s3, and then manually trigger restore on production vm, and you will have what you added locally also in production.
 - Push code to bitbucket/github
 
 ### Deployment Flow
 - Deploy to production
-  - Use the scripts from cicd folder to deploy to production. 
+  - Use the scripts from ansible folder to deploy to production. 
   - Trigger ansible scripts for deployment to production, either locally or in github/bitbucket pipeline.
   - The scripts will connect with ssh to production vm, and will fetch the new docker images from docker hub, and start them.
-  - If during the deployment you also did changes on the database data, or website data, and did a backup from local. You can trigger restore, to get the backup and restore it to production. 
+  - If during the deployment you also did changes on the database data, or website data, and did a backup from local. You can trigger volume deployment, to get the volume backup and restore it to production. 
 - Test production after deploy
 
 ## Future thoughts
