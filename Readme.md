@@ -9,24 +9,8 @@ Feel free to submit improvements as Pull Requests. For sure this project can be 
 Don't like reading, want some action, jump to: [Use Cases](#use-cases)
 
 ## How to use
-This project is meant to be added as a git submodule to your website repo.
-Your website repo needs to have the following folders and files in the root:
-- env
-  - ansible-inventory
-    - local.yml
-    - prod.yml
-  - build.yml
-  - common.yml
-  - deploy.local.yml
-  - deploy.prod.yml
-- ssl-certs
-  - ssl.crt
-  - ssl.key
-- ssh
-  - prod-key.pem
-- wp-content
-
-Check example repository here: [Wordpress on Docker - Website](https://github.com/kristo-godari) 
+This project is meant to be added as a git submodule to your website repo. This website repo needs to have a specific structure. 
+Check example structure here: [WordPress on Docker - Website Repository Example](https://github.com/kristo-godari/wordpress-on-docker-website-repo-example) 
 
 ## Conceptual design
 Check out the conceptual design here: [Conceptual Design](docs/conceptual-design.md) to understand the big picture.
