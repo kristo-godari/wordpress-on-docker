@@ -96,7 +96,7 @@ Note: Below i provide the steps so you understand the process, but all those ste
 - At this point we have containers, and volumes, we can test locally, follow the section [Local Testing](#local-testing) from below, and once you finished there you can continue with next steps here.
 - Setup wordpress, configure it, install plugins, themes, add content etc... 
 - Once you are happy with the results, and everyting is working you can publish docker images to docker hub, by running: `ansible-playbook playbooks/publish-docker-images.yaml`
-- Once you are ready, or you want to save the progress, you can run: `ansible-playbook playbooks/backup-docker-volumes.yaml -e "env=local version=local"` or `ansible-playbook backup-docker-volumes.yaml -e "env=local version=dev"`
+- Once you are ready, or you want to save the progress, you can run: `ansible-playbook playbooks/backup-docker-volumes.yaml -e "env=local version=local"` or `ansible-playbook playbooks/backup-docker-volumes.yaml -e "env=local version=dev"`
   - This will backup your volumes, in S3 under the local or dev folder. Local if you want to save work for latter, dev if you want to proceed with the prod deployment.
 - To delploy in production we need:
   - First we need to install docker on the VM (only if not installed already): `ansible-playbook playbooks/install-docker-on-ubuntu.yaml`
