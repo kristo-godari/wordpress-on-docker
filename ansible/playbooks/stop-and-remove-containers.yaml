@@ -1,6 +1,6 @@
 ---
 - name: Stop and remove containers
-  hosts: docker_deployment_hosts
+  hosts: "{{ 'localhost' if env == 'local' else 'prod_host' }}"
   gather_facts: false
   
   tasks:

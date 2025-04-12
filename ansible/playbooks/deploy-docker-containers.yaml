@@ -65,7 +65,7 @@
         published_ports:
           - "6080:8080"
         env:
-          DATABASE_HOST: "database"
+          DATABASE_HOST: "{{ DB_HOST }}"
         restart_policy: always
         networks:
           - name: "{{ DOMAIN_NAME }}_network"

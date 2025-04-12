@@ -1,6 +1,6 @@
 ---
 - name: Setup Docker Volumes
-  hosts: localhosts
+  hosts: localhost
   vars_files:
     - ../../../env/common.yml
     - ../../../env/build.yml

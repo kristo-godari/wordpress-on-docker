@@ -1,6 +1,6 @@
 ---
 - name: Publish Docker Images
-  hosts: docker_deployment_hosts
+  hosts: localhost
   vars_files:
     - ../../../env/common.yml
   tasks:

@@ -17,15 +17,13 @@ tar xvf /workspace/backup/webserver-backup.tar --strip 2
 cd /var/www/vhosts/
 touch test.txt
 rm -r *
-cp -r /workspace/tmp/website-files/$DOMAIN_NAME /var/www/vhosts/
+cp -r /workspace/tmp/website-files/. "/var/www/vhosts/$DOMAIN_NAME/html/wp-content"
 
 # fix permissions
 chown -R nobody:nogroup "/var/www/vhosts/$DOMAIN_NAME/html/"
 
 # copy webserver config 
-cp -r /workspace/tmp/webserver-config/. /usr/local/lsws/conf
 cp -r /workspace/tmp/webserver-certs/. /usr/local/lsws/cert
-cp -r /workspace/tmp/sartup-files/. /home
 
 # replace database files
 cd /var/lib/mysql

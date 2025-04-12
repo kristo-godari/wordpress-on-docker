@@ -1,6 +1,6 @@
 ---
 - name: Execute backup script on Docker container
-  hosts: localhosts
+  hosts: localhost
   roles:
     - name: set_variables
     - name: set_docker_volume_version

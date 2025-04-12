@@ -16,7 +16,7 @@
     -e AWS_BACKUP_BUCKET={{ AWS_BACKUP_BUCKET }}
     -e DOMAIN_NAME={{ DOMAIN_NAME }}
     -e DOCKER_VOLUME_VERSION={{ DOCKER_VOLUME_VERSION }}
-    -v {{ DOMAIN_NAME }}_website_files:/var/www/vhosts/
+    -v {{ DOMAIN_NAME }}_website_files:/var/www/vhosts/{{ DOMAIN_NAME }}/html/wp-content
     -v {{ DOMAIN_NAME }}_webserver_certs:/usr/local/lsws/cert
     -v {{ DOMAIN_NAME }}_db_data:/var/lib/mysql
     {{ DOCKER_HUB_REPOSITORY }}:{{ DOMAIN_NAME }}-restore-{{ IMAGE_TAG }}
